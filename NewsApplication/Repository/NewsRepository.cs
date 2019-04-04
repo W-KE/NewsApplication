@@ -1,54 +1,46 @@
-﻿using System;
-using HtmlAgilityPack;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using NewsApplication.Models;
-using System.Web;
+using System.Xml;
+using System.Net.Http;
+using System.Globalization;
+using System;
 
 namespace NewsApplication.Repository
 {
     public class NewsRepository
     {
-        public static List<NewsModel> GetProductList()
+        public static List<NewsModel> GetNewsList()
         {
-            HtmlWeb website = new HtmlWeb();
-            List<NewsModel> prod_list = new List<NewsModel>();
+            string url = "http://rss.nzherald.co.nz/rss/xml/nzhtsrsscid_000000698.xml";
+            XmlDocument doc = new XmlDocument();
+            doc.Load(url);
+            XmlNodeList news_nodes = doc.GetElementsByTagName("item");
 
-            prod_list.Add(new NewsModel()
+            List<NewsModel> news_list = new List<NewsModel>();
+            string source = doc.GetElementsByTagName("title")[0].InnerText;
+
+            //go over each news
+            foreach (XmlNode item in news_nodes)
             {
-                NewsId = "www.stuff.co.nz/111746865",
-                NewsTitle = "'We're in crazytown now': Spectacular fall of WND, the king of conspiracy sites",
-                NewsDescription = "US website founder built an empire stoking \"birther\" theories, but now it's imploding.",
-                NewsDate = "Tue, 02 Apr 2019 18:51:51 GMT",
-                NewsLink = "https://www.stuff.co.nz/business/world/111746865/were-in-crazytown-now-spectacular-fall-of-wnd-the-king-of-rightwing-conspiracy-sites.html",
-                NewsSource = "Stuff.co.nz",
-                NewsAuthor = "MANUEL ROIG-FRANZIA"
-            });
+                //add a new product with the content of every news inner text
+                news_list.Add(new NewsModel()
+                {
+                    NewsId = item.SelectSingleNode("link").InnerText,
+                    NewsTitle = item.SelectSingleNode("title").InnerText,
+                    NewsDescription = item.SelectSingleNode("description").InnerText,
+                    NewsDate = GetTime(item.SelectSingleNode("pubDate").InnerText),
+                    NewsLink = item.SelectSingleNode("link").InnerText,
+                    NewsSource = source,
+                    NewsAuthor = item.SelectSingleNode("author").InnerText,
+                });
+            }
+            return news_list;
+        }
 
-            prod_list.Add(new NewsModel()
-            {
-                NewsId = "www.stuff.co.nz/111746865",
-                NewsTitle = "'We're in crazytown now': Spectacular fall of WND, the king of conspiracy sites",
-                NewsDescription = "US website founder built an empire stoking \"birther\" theories, but now it's imploding.",
-                NewsDate = "Tue, 02 Apr 2019 18:51:51 GMT",
-                NewsLink = "https://www.stuff.co.nz/business/world/111746865/were-in-crazytown-now-spectacular-fall-of-wnd-the-king-of-rightwing-conspiracy-sites.html",
-                NewsSource = "Stuff.co.nz",
-                NewsAuthor = "MANUEL ROIG-FRANZIA"
-            });
-
-            prod_list.Add(new NewsModel()
-            {
-                NewsId = "www.stuff.co.nz/111746865",
-                NewsTitle = "'We're in crazytown now': Spectacular fall of WND, the king of conspiracy sites",
-                NewsDescription = "US website founder built an empire stoking \"birther\" theories, but now it's imploding.",
-                NewsDate = "Tue, 02 Apr 2019 18:51:51 GMT",
-                NewsLink = "https://www.stuff.co.nz/business/world/111746865/were-in-crazytown-now-spectacular-fall-of-wnd-the-king-of-rightwing-conspiracy-sites.html",
-                NewsSource = "Stuff.co.nz",
-                NewsAuthor = "MANUEL ROIG-FRANZIA"
-            });
-
-            return prod_list;
+        public static DateTime GetTime(string time)
+        {
+            DateTimeOffset result = DateTimeOffset.Parse(time, CultureInfo.InvariantCulture);
+            return result.DateTime;
         }
     }
 }

@@ -13,7 +13,7 @@ namespace NewsApplication.Models
 
         public string NewsDescription { get; set; }
 
-        public string NewsDate { get; set; }
+        public DateTime NewsDate { get; set; }
 
         public string NewsLink { get; set; }
 
